@@ -1,0 +1,6 @@
+{
+  "title": "Default Core App",
+  "themeColor": "#2196F3",
+  "content": "# Default App\n\nThis is a fallback configuration. If you see this, the automation script hasn't injected a custom `config.json`.",
+  "items": []
+}
