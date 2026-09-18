@@ -1,0 +1,127 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-website:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies and build website
+        working-directory: website_portfolio
+        run: |
+          npm ci
+          npm run build
+
+  build-flutter-android-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build Core Template APK
+        working-directory: flutter_templates/core_base
+        run: |
+          flutter pub get
+          flutter build apk --release
+
+      - name: Build Core Template Web
+        working-directory: flutter_templates/core_base
+        run: |
+          flutter build web --release
+
+      - name: Upload Core APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: core-base-apk
+          path: flutter_templates/core_base/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Core Web Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: core-base-web
+          path: flutter_templates/core_base/build/web/
+
+  build-flutter-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build Core Template iOS (No Code Signing)
+        working-directory: flutter_templates/core_base
+        run: |
+          flutter pub get
+          flutter build ios --release --no-codesign
+
+      - name: Upload Core iOS App Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: core-base-ios
+          path: flutter_templates/core_base/build/ios/iphoneos/Runner.app/
+
+  release:
+    needs: [build-website, build-flutter-android-web, build-flutter-ios]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: core-base-apk
+          path: .
+
+      - name: Download Web Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: core-base-web
+          path: web-build
+
+      - name: Download iOS Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: core-base-ios
+          path: ios-build
+
+      - name: Zip Web & iOS Builds
+        run: |
+          zip -r web-build.zip web-build/
+          zip -r ios-build.zip ios-build/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            app-release.apk
+            web-build.zip
+            ios-build.zip
+          name: Release ${{ github.sha }}
+          tag_name: release-${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
