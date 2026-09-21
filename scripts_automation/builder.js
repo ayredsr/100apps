@@ -78,8 +78,18 @@ async function main() {
     const appsToGenerate = await parsePlanningMD();
     console.log(`Found ${appsToGenerate.length} apps to generate.`);
 
-    for (let i = 0; i < appsToGenerate.length; i++) {
-        await buildApp(appsToGenerate[i], i + 1);
+    const args = process.argv.slice(2);
+    if (args.length > 0) {
+        const appIndex = parseInt(args[0], 10);
+        if (isNaN(appIndex) || appIndex < 1 || appIndex > appsToGenerate.length) {
+            console.error(`Invalid app index provided. Please provide a number between 1 and ${appsToGenerate.length}.`);
+            process.exit(1);
+        }
+        await buildApp(appsToGenerate[appIndex - 1], appIndex);
+    } else {
+        for (let i = 0; i < appsToGenerate.length; i++) {
+            await buildApp(appsToGenerate[i], i + 1);
+        }
     }
 
     console.log("\nAutomation Complete!");
