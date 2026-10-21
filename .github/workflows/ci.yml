@@ -46,31 +46,31 @@ jobs:
         working-directory: scripts_automation
         run: |
           npm ci
-          node builder.js 2
+          node builder.js 3
 
       - name: Build Core Template APK
-        working-directory: flutter_templates/generated_apps/app_002
+        working-directory: flutter_templates/generated_apps/app_003
         run: |
           flutter pub get
           flutter build apk --release
 
       - name: Build Core Template Web
-        working-directory: flutter_templates/generated_apps/app_002
+        working-directory: flutter_templates/generated_apps/app_003
         run: |
           flutter build web --release
 
       - name: Upload Core APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-002-apk
-          path: flutter_templates/generated_apps/app_002/build/app/outputs/flutter-apk/app-release.apk
+          name: app-003-apk
+          path: flutter_templates/generated_apps/app_003/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
       - name: Upload Core Web Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-002-web
-          path: flutter_templates/generated_apps/app_002/build/web/
+          name: app-003-web
+          path: flutter_templates/generated_apps/app_003/build/web/
           if-no-files-found: error
 
   build-flutter-ios:
@@ -93,10 +93,10 @@ jobs:
         working-directory: scripts_automation
         run: |
           npm ci
-          node builder.js 2
+          node builder.js 3
 
       - name: Build Core Template iOS (No Code Signing)
-        working-directory: flutter_templates/generated_apps/app_002
+        working-directory: flutter_templates/generated_apps/app_003
         run: |
           flutter pub get
           flutter build ios --release --no-codesign
@@ -104,8 +104,8 @@ jobs:
       - name: Upload Core iOS App Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-002-ios
-          path: flutter_templates/generated_apps/app_002/build/ios/iphoneos/Runner.app/
+          name: app-003-ios
+          path: flutter_templates/generated_apps/app_003/build/ios/iphoneos/Runner.app/
           if-no-files-found: error
 
   release:
@@ -121,19 +121,19 @@ jobs:
       - name: Download APK Artifact
         uses: actions/download-artifact@v4
         with:
-          name: app-002-apk
+          name: app-003-apk
           path: .
 
       - name: Download Web Artifact
         uses: actions/download-artifact@v4
         with:
-          name: app-002-web
+          name: app-003-web
           path: web-build
 
       - name: Download iOS Artifact
         uses: actions/download-artifact@v4
         with:
-          name: app-002-ios
+          name: app-003-ios
           path: ios-build
 
       - name: Zip Web & iOS Builds
